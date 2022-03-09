@@ -34,16 +34,15 @@ import {
   CollectiblesController,
   AssetsContractController,
   CollectibleDetectionController,
-} from '@metamask/controllers';
-import SmartTransactionsController from '@metamask/smart-transactions-controller';
-import {
   PermissionController,
   SubjectMetadataController,
   ///: BEGIN:ONLY_INCLUDE_IN(flask)
-  SnapController,
+  RateLimitController,
   ///: END:ONLY_INCLUDE_IN
-} from '@metamask/snap-controllers';
+} from '@metamask/controllers';
+import SmartTransactionsController from '@metamask/smart-transactions-controller';
 ///: BEGIN:ONLY_INCLUDE_IN(flask)
+import { SnapController } from '@metamask/snap-controllers';
 import { IframeExecutionService } from '@metamask/iframe-execution-environment-service';
 ///: END:ONLY_INCLUDE_IN
 
@@ -230,9 +229,15 @@ export default class MetamaskController extends EventEmitter {
       state: initState.TokensController,
     });
 
-    this.assetsContractController = new AssetsContractController({
-      provider: this.provider,
-    });
+    this.assetsContractController = new AssetsContractController(
+      {
+        onPreferencesStateChange: (listener) =>
+          this.preferencesController.store.subscribe(listener),
+      },
+      {
+        provider: this.provider,
+      },
+    );
 
     this.collectiblesController = new CollectiblesController(
       {
